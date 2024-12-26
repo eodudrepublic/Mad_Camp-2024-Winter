@@ -2,4 +2,6 @@
 
 ## 1주차 (팀원 : KAIST 최연우)
 
-### 주제 :
+### 이름 : KAISTDelivery
+
+### 주제 : 카이스트 기숙사에서 배달이 되는 식당을 소개하는 Flutter Application
