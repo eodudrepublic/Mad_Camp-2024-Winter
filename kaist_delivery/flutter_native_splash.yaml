@@ -1,0 +1,25 @@
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/icon/splash_icon.png"
+  branding: "assets/icon/branding.png"
+  color_dark: "#FFFFFF"
+  image_dark: "assets/icon/splash_icon.png"
+  branding_dark: "assets/icon/branding.png"
+
+  android_12:
+    color: "#FFFFFF"
+    image: "assets/icon/splash_icon.png"
+    branding: "assets/icon/branding.png"
+    icon_background_color: "#FFFFFF"
+    color_dark: "#FFFFFF"
+    image_dark: "assets/icon/splash_icon.png"
+    branding_dark: "assets/icon/branding.png"
+    icon_background_color_dark: "#FFFFFF"
+
+  web: false
+  ios: true
+  android: true
+
+  # 이미지 맞춤 방식 설정
+  android_gravity: center
+  ios_content_mode: center

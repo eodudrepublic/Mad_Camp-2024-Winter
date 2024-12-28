@@ -12,11 +12,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ScreenUtilInit(
-      designSize: Size(390, 850),
+    return ScreenUtilInit(
+      designSize: const Size(390, 850),
       // TODO : getPages 루트 설정
       child: GetMaterialApp(
-        title: '레스토랑 앱',
         home: HomeView(),
       ),
     );
