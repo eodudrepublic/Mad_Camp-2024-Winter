@@ -5,12 +5,6 @@ import '../../common/app_colors.dart';
 import '../../controller/tab3/search_controller.dart';
 import '../tab1/widget/restaurant_card.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-// class SearchView extends StatelessWidget {
-//   SearchView({super.key});
-//
-//   final RestaurantSearchController controller =
-//   Get.put(RestaurantSearchController());
-//   final TextEditingController searchController = TextEditingController();
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -20,8 +14,8 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  final RestaurantSearchController controller =
-  Get.put(RestaurantSearchController());
+  // HomeBinding에서 Get.lazyPut으로 초기화한 RestaurantSearchController를 사용
+  final RestaurantSearchController controller = Get.find();
   late TextEditingController searchController = TextEditingController();
 
   @override

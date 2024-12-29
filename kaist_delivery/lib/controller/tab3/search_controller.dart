@@ -14,6 +14,8 @@ class RestaurantSearchController extends GetxController {
     loadRestaurants();
   }
 
+  // TODO : tab1(RestaurantController)와 tab3(RestaurantSearchController)의 컨트롤러를 병합할 수 있을것 같은데?
+  // -> 이럴 경우 tab3의 초기 로딩 속도가 많이 줄어들 것으로 예상
   Future<void> loadRestaurants() async {
     try {
       isLoading(true);
@@ -41,6 +43,7 @@ class RestaurantSearchController extends GetxController {
       );
     }
   }
+
   // 검색 결과 초기화 메서드 추가
   void clearSearchResults() {
     filteredList.assignAll(restaurantList); // 전체 레스토랑 목록으로 초기화

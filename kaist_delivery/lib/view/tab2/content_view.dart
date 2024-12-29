@@ -6,8 +6,8 @@ import '../../controller/tab2/content_controller.dart';
 class ContentView extends StatelessWidget {
   ContentView({super.key});
 
-  // GetX를 사용하여 컨트롤러 초기화
-  final ContentController controller = Get.put(ContentController());
+  // HomeBinding에서 Get.lazyPut으로 초기화한 ContentController를 사용
+  final ContentController controller = Get.find();
 
   @override
   Widget build(BuildContext context) {

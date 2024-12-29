@@ -22,7 +22,7 @@ class RestaurantCard extends StatelessWidget {
           BoxShadow(
             color: Colors.grey.withOpacity(0.5), // 그림자 색상
             blurRadius: 4, // 그림자 흐림 정도
-            offset: Offset(0, 4), // 그림자 위치 (x, y)
+            offset: const Offset(0, 4), // 그림자 위치 (x, y)
           ),
         ],
       ),
@@ -31,9 +31,10 @@ class RestaurantCard extends StatelessWidget {
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: Container(
-            width: 0.2.sw, height: 0.2.sw,
+            width: 0.2.sw,
+            height: 0.2.sw,
             child: Image.asset(
-              'assets/image/' + restaurant.name + '.jpg',
+              'assets/image/${restaurant.name}.jpg',
               fit: BoxFit.cover,
             ),
           ),
@@ -62,6 +63,7 @@ class RestaurantCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 0.01.sh),
+                // TODO : 영업시간이 아니면 흐려지게 / 아니면 아래에 위치하는 기능 추가
                 Row(
                   children: [
                     Icon(Icons.access_time, size: 16.sp, color: Colors.grey),
@@ -73,7 +75,7 @@ class RestaurantCard extends StatelessWidget {
                 ),
               ],
             ),
-            Spacer(),
+            const Spacer(),
             TextButton(
               onPressed: () {
                 onCall(restaurant.phone);
