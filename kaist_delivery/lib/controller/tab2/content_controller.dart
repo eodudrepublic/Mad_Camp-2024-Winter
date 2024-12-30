@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../model/content.dart';
@@ -28,9 +29,10 @@ class ContentController extends GetxController {
       // JSON을 Content 모델로 매핑
       var loadedContents =
           jsonResponse.map((json) => Content.fromJson(json)).toList();
+      // 리스트를 랜덤으로 섞기
+      loadedContents.shuffle(Random());
       // 옵저버블 리스트 업데이트
       contentList.assignAll(loadedContents);
-      // TODO : 이거 랜덤으로 바꾸면 좋지 않을까?
     } catch (e) {
       Get.snackbar('에러', '컨텐츠 데이터를 불러오지 못했습니다.');
     } finally {

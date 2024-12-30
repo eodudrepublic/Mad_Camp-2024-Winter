@@ -1,51 +1,138 @@
 import 'package:flutter/material.dart';
-import 'package:kaist_delivery/view/tab1/widget/restaurant_card.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../common/app_colors.dart';
+import '../../common/widget/custom_appbar.dart';
 import '../../controller/tab1/restaurant_controller.dart';
+import 'package:kaist_delivery/view/tab1/widget/restaurant_card.dart';
 
-class RestaurantView extends StatelessWidget {
-  RestaurantView({super.key});
+class RestaurantView extends StatefulWidget {
+  const RestaurantView({super.key});
 
+  @override
+  _RestaurantViewState createState() => _RestaurantViewState();
+}
+
+class _RestaurantViewState extends State<RestaurantView> {
   // HomeBinding에서 Get.lazyPut으로 초기화한 RestaurantController를 사용
   final RestaurantController controller = Get.find();
-
-  //call 기능
-  Future<void> _call(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-    //print(launchUri);           //전화번호 맞는지 확인
-    if (!await launchUrl(launchUri)) {
-      throw '전화번호가 없습니다.';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: CustomAppBar(
+        titleText: 'K-밥심',
+        rightIconPath: 'assets/icon/search_icon.png',
+        onRightIconTap: () {
+          // TODO: Add search functionality
+        },
+      ),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
-        }
-
-        if (controller.restaurantList.isEmpty) {
+        } else if (controller.restaurantList.isEmpty) {
           return const Center(child: Text('레스토랑이 없습니다.'));
-        }
+        } else {
+          // 레스토랑 리스트 정렬 -> 영업시간 아닌 식당은 아래에 위치하도록
+          controller.sortRestaurants();
+          controller.filterRestaurantsByCategory();
 
-        return ListView.builder(
-          itemCount: controller.restaurantList.length,
-          itemBuilder: (context, index) {
-            final restaurant = controller.restaurantList[index];
-            return RestaurantCard(
-              restaurant: restaurant,
-              onCall: _call,
-            );
-          },
-        );
+          return Column(
+            children: [
+              // 상단 카테고리
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal, // 수평 방향으로 스크롤되는 카테고리 버튼
+                  controller: controller.scrollController,
+                  child: Row(
+                    children:
+                        List.generate(controller.categories.length, (index) {
+                      return _categoryButton(
+                          controller.categories[index], index);
+                    }),
+                  ),
+                ),
+              ),
+
+              // NotificationListener로 전체 화면에서 스와이프 감지
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollUpdateNotification) {
+                      int index = (controller.pageController.page ?? 0).round();
+                      setState(() {
+                        controller.selectedCategoryIndex.value = index;
+                      });
+                    }
+                    return true;
+                  },
+                  child: PageView(
+                    controller: controller.pageController,
+                    onPageChanged: (index) {
+                      controller.changeCategory(index);
+                    },
+                    children: controller.categories.map((category) {
+                      return _categoryPage(category);
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
       }),
+    );
+  }
+
+  // 카테고리 페이지
+  Widget _categoryPage(String category) {
+    return ListView.builder(
+      itemCount: controller.filteredList.length,
+      itemBuilder: (context, index) {
+        final restaurant = controller.filteredList[index];
+        return RestaurantCard(
+          restaurant: restaurant,
+          onCall: controller.call,
+        );
+      },
+    );
+  }
+
+  // 카테고리 버튼
+  Widget _categoryButton(String category, int index) {
+    return Padding(
+      padding: EdgeInsets.only(right: 10.w),
+      child: GestureDetector(
+        onTap: () {
+          controller.changeCategory(index);
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: controller.selectedCategoryIndex.value == index
+                  ? Colors.black
+                  : Colors.grey,
+              width: 1,
+            ),
+            color: controller.selectedCategoryIndex.value == index
+                ? AppColors.mainThemeColor
+                : Colors.white,
+          ),
+          child: Text(
+            category,
+            style: TextStyle(
+              fontSize: 15,
+              color: controller.selectedCategoryIndex.value == index
+                  ? Colors.black
+                  : Colors.grey,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

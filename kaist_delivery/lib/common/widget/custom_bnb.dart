@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kaist_delivery/common/app_colors.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -39,36 +40,36 @@ class CustomBottomNavigationBar extends StatelessWidget {
               currentIndex == 0
                   ? 'assets/svg/food_on.svg'
                   : 'assets/svg/food_off.svg',
-              height: (iconHeight * (4 / 4)).sp,
-              width: (iconWidth * (4 / 4)).sp,
+              height: (iconHeight * (6/7)).sp,
+              width: (iconWidth * (6/7)).sp,
             ),
             isSelected: currentIndex == 0,
             onTap: () => onTap(0),
-            label: "메뉴 추천",
+            label: "맛집 소개",
           ),
           _buildIconButton(
             icon: SvgPicture.asset(
               currentIndex == 1
-                  ? 'assets/svg/menu_on.svg'
-                  : 'assets/svg/menu_off.svg',
-              height: (iconHeight * (4 / 5)).sp,
-              width: (iconWidth * (4 / 5)).sp,
+                  ? 'assets/svg/home_on.svg'
+                  : 'assets/svg/home_off.svg',
+              height: (iconHeight * (6/7)).sp,
+              width: (iconWidth * (6/7)).sp,
             ),
             isSelected: currentIndex == 1,
             onTap: () => onTap(1),
-            label: "가게 목록",
+            label: "홈",
           ),
           _buildIconButton(
             icon: SvgPicture.asset(
               currentIndex == 2
-                  ? 'assets/svg/search_on.svg'
-                  : 'assets/svg/search_off.svg',
-              height: (iconHeight * (8 / 9)).sp,
-              width: (iconWidth * (8 / 9)).sp,
+                  ? 'assets/svg/menu_on.svg'
+                  : 'assets/svg/menu_off.svg',
+              height: (iconHeight * (6/7)).sp,
+              width: (iconWidth * (6/7)).sp,
             ),
             isSelected: currentIndex == 2,
             onTap: () => onTap(2),
-            label: "검색",
+            label: "나의 목록",
           ),
         ],
       ),
@@ -90,13 +91,14 @@ class CustomBottomNavigationBar extends StatelessWidget {
           const SizedBox(
             height: 3,
           ),
-          if (isSelected && label != null) // 선택된 경우 라벨 표시
+          if (label != null) // 라벨이 있을 경우 항상 표시
             Text(
               label,
               style: TextStyle(
                 fontSize: 12.sp,
-                color: Colors.black, // 라벨 색상
-                // TODO : 라벨 색상을 mainThemeColor로 아이콘과 같게 설정하면 어떨까요?
+                color: isSelected
+                    ? AppColors.mainThemeDarkColor // 선택된 경우 진한 노랑색
+                    : Colors.black, // 선택되지 않은 경우 검은색
               ),
             ),
         ],

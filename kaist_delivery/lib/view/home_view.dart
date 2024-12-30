@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaist_delivery/controller/tab1/restaurant_controller.dart';
 import 'package:kaist_delivery/controller/tab2/content_controller.dart';
-import 'package:kaist_delivery/controller/tab3/search_controller.dart';
+import 'package:kaist_delivery/controller/tab3/pick_controller.dart';
 import 'package:kaist_delivery/view/tab1/restaurant_view.dart';
 import 'package:kaist_delivery/view/tab2/content_view.dart';
-import 'package:kaist_delivery/view/tab3/search_view.dart';
-import '../common/widget/custom_appbar.dart';
+import 'package:kaist_delivery/view/tab3/pick_view.dart';
 import '../common/widget/custom_bnb.dart';
 
 class HomeView extends StatefulWidget {
@@ -21,8 +20,8 @@ class _HomeViewState extends State<HomeView> {
 
   final List<Widget> _pages = [
     ContentView(),
-    RestaurantView(),
-    const SearchView(),
+    const RestaurantView(),
+    const PickView(),
   ];
 
   void _onItemTapped(int index) {
@@ -34,7 +33,6 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(),
       body: _pages[_currentIndex],
       bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: _currentIndex,
@@ -50,6 +48,6 @@ class HomeBinding extends Bindings {
     // tab1, tab2, tab3의 컨트롤러를 lazy 방식으로 초기화
     Get.lazyPut(() => RestaurantController());
     Get.lazyPut(() => ContentController());
-    Get.lazyPut(() => RestaurantSearchController());
+    Get.lazyPut(() => PickController());
   }
 }
