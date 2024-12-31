@@ -4,11 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class RestaurantCard extends StatelessWidget {
   final dynamic restaurant;
   final Function(String) onCall;
+  final Function(String) onMap;
 
   const RestaurantCard({
     super.key,
     required this.restaurant,
     required this.onCall,
+    required this.onMap,
   });
 
   @override
@@ -38,7 +40,7 @@ class RestaurantCard extends StatelessWidget {
     bool isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+      margin: EdgeInsets.symmetric(vertical: 10.h),
       decoration: BoxDecoration(
         color:
             isOpen ? Colors.white : Colors.grey.shade300, // 영업시간 아니면 배경색 흐려짐.
@@ -66,7 +68,7 @@ class RestaurantCard extends StatelessWidget {
         title: Text(
           restaurant.name,
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             fontSize: 16.sp,
           ),
         ),
@@ -75,14 +77,14 @@ class RestaurantCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 0.01.sh),
+                SizedBox(height: 0.015.sh),
                 Row(
                   children: [
                     Icon(Icons.phone, size: 16.sp, color: Colors.grey),
                     SizedBox(width: 5.w),
                     Text(
                       restaurant.phone,
-                      style: TextStyle(fontSize: 14.sp),
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -90,24 +92,54 @@ class RestaurantCard extends StatelessWidget {
                 Row(
                   children: [
                     Icon(Icons.access_time, size: 16.sp, color: Colors.grey),
+                    SizedBox(width: 5.w),
                     Text(
                       '${restaurant.openTime} - ${restaurant.closeTime}',
-                      style: TextStyle(fontSize: 14.sp),
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
+                SizedBox(height: 0.01.sh),
               ],
             ),
             const Spacer(),
-            TextButton(
-              onPressed: () {
-                onCall(restaurant.phone);
-              },
-              child: Text(
-                '전화연결',
-                style: TextStyle(fontSize: 14.sp),
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,  // 버튼 크기를 최소화
+              crossAxisAlignment: CrossAxisAlignment.start,  // 왼쪽 정렬
+              children: [
+                SizedBox(height: 0.015.sh),
+                GestureDetector(
+                  onTap: () {
+                    onCall(restaurant.phone);  // 전화연결
+                  },
+                  child: Text(
+                    '전화연결',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.indigo,  // 텍스트 클릭 가능한 색상
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 0.01.sh),
+                GestureDetector(
+                  onTap: () {
+                    onMap(restaurant.name);  // 지도연결
+                  },
+                  child: Text(
+                    '지도연결',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.indigo,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 0.01.sh),
+              ],
             ),
+
+
           ],
         ),
       ),

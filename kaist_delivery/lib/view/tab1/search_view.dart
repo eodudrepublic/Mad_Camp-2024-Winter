@@ -26,12 +26,6 @@ class _SearchViewState extends State<SearchView> {
   }
 
   @override
-  void dispose() {
-    controller.clearSearchResults(); // 검색 결과 초기화
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     // TODO : 화면 틀 좌우 여백 20.sp로 통일 필요
     return Scaffold(
@@ -39,7 +33,8 @@ class _SearchViewState extends State<SearchView> {
       appBar: CustomAppBar(
         leftIconPath: 'assets/icon/back_icon.png',
         onLeftIconTap: () {
-          // TODO : Get.back();
+          controller.clearSearchResults(); // 검색 결과 초기화
+          Get.back();
         },
         centerWidget: buildSearchBar(),
       ),
@@ -52,14 +47,14 @@ class _SearchViewState extends State<SearchView> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (controller.filteredList.isEmpty) {
+              if (controller.searchList.isEmpty) {
                 return const Center(child: Text('검색 결과가 없습니다.'));
               }
 
               return ListView.builder(
-                itemCount: controller.filteredList.length,
+                itemCount: controller.searchList.length,
                 itemBuilder: (context, index) {
-                  final restaurant = controller.filteredList[index];
+                  final restaurant = controller.searchList[index];
                   return RestaurantCard(
                     restaurant: restaurant,
                     onCall: (phoneNumber) {
@@ -73,6 +68,17 @@ class _SearchViewState extends State<SearchView> {
                         Get.snackbar('오류', '전화 연결 실패: $e');
                       }
                     },
+                    onMap: (placeid) {
+                      final Uri launchUri = Uri(
+                          scheme: 'nmap',
+                          host: 'place',
+                          queryParameters: {'placeid': placeid});
+                      try {
+                        launchUrl(launchUri);
+                      } catch (e) {
+                        Get.snackbar('오류', '지도 연결 실패: $e');
+                      }
+                    },
                   );
                 },
               );
@@ -83,7 +89,6 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
-  // TODO : 검색 페이지에 쓰일 검색바 위젯 -> AppBar에 들어감
   Widget buildSearchBar() {
     return Container(
       height: 40.sp,

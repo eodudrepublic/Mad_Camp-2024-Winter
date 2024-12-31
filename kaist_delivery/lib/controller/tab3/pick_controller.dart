@@ -1,37 +1,80 @@
 import 'dart:math';
 import 'package:get/get.dart';
+import '../../database/model/pick_model.dart';
 import '../../model/pick.dart';
+import '../../database/repository/pick_repository.dart';
 
 class PickController extends GetxController {
-  // '나의 Pick' 리스트
+  // '나의 Pick' 리스트 (UI에서 사용할 모델)
   var pickList = <Pick>[].obs;
 
   // 현재 추천된 메뉴
   var selectedPick = ''.obs;
 
+  // PickRepository 객체
+  final PickRepository _pickRepository = PickRepository();
+
   @override
   void onInit() {
     super.onInit();
-    // TODO : DB에서 받아오도록 기능 추가 -> DB도 추가해야함
-    // 예시용 Pick 데이터 추가
-    pickList.addAll([
-      Pick(name: '떡볶이'),
-      Pick(name: '치킨'),
-      Pick(name: '피자'),
-      Pick(name: '돈까스'),
-      Pick(name: '치즈카츠'),
-      Pick(name: '우동'),
-      Pick(name: '제육볶음'),
-      Pick(name: '짬뽕'),
-      Pick(name: '쌀국수'),
-      Pick(name: '감자튀김'),
-      Pick(name: '보쌈'),
-      Pick(name: '족발'),
-      Pick(name: '육회'),
-    ]);
+    // 1) DB에서 데이터를 받아와 pickList에 저장
+    _loadPicksFromDB();
+
+    /// TEST
+    //addPick(DateTime.now().toString());
+    // _pickRepository.deleteAllPicks();
   }
 
-  // 리스트에서 랜덤으로 하나 선택
+  /// -----------------------------
+  /// 1) onInit()에서 DB → pickList
+  /// -----------------------------
+  Future<void> _loadPicksFromDB() async {
+    // DB에서 전체 PickModel을 가져옴
+    List<PickModel> pickModels = await _pickRepository.getAllPicks();
+
+    // DB 모델(PickModel)을 UI 모델(Pick)로 변환하여 pickList에 저장
+    pickList.value = pickModels.map((p) => Pick(name: p.name)).toList();
+  }
+
+  /// -----------------------------
+  /// 2) Pick 추가
+  /// -----------------------------
+  Future<void> addPick(String name) async {
+    // DB에 insert
+    await _pickRepository.insertPick(PickModel(name: name));
+
+    // pickList에도 반영
+    pickList.add(Pick(name: name));
+  }
+
+  /// -----------------------------
+  /// 3) Pick 삭제
+  /// -----------------------------
+  Future<void> deletePick(String name) async {
+    // DB에서 삭제
+    await _pickRepository.deletePickByName(name);
+
+    // pickList에서도 제거
+    pickList.removeWhere((p) => p.name == name);
+  }
+
+  /// -----------------------------
+  /// 4) Pick 수정
+  /// -----------------------------
+  Future<void> updatePick(String oldName, String newName) async {
+    // DB에서 oldName → newName 으로 수정
+    await _pickRepository.updatePickName(oldName, newName);
+
+    // pickList에서 oldName을 찾아 newName으로 교체
+    final index = pickList.indexWhere((p) => p.name == oldName);
+    if (index != -1) {
+      pickList[index] = Pick(name: newName);
+    }
+  }
+
+  /// -----------------------------
+  /// 랜덤으로 Pick 선택
+  /// -----------------------------
   void getRandomPick() {
     if (pickList.isEmpty) {
       selectedPick.value = '';

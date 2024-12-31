@@ -43,6 +43,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: AppColors.mainThemeColor,
+      automaticallyImplyLeading: false,
       // 가운데 영역
       title: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -70,9 +71,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             Text(
               titleText!,
               style: TextStyle(
+                fontFamily: "Titlefont",
                 color: Colors.black,
                 fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
               ),
             ),
         ],

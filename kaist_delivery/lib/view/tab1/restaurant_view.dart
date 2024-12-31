@@ -25,7 +25,7 @@ class _RestaurantViewState extends State<RestaurantView> {
         titleText: 'K-밥심',
         rightIconPath: 'assets/icon/search_icon.png',
         onRightIconTap: () {
-          // TODO: Add search functionality
+          Get.toNamed('/search');
         },
       ),
       body: Obx(() {
@@ -34,16 +34,13 @@ class _RestaurantViewState extends State<RestaurantView> {
         } else if (controller.restaurantList.isEmpty) {
           return const Center(child: Text('레스토랑이 없습니다.'));
         } else {
-          // 레스토랑 리스트 정렬 -> 영업시간 아닌 식당은 아래에 위치하도록
-          controller.sortRestaurants();
-          controller.filterRestaurantsByCategory();
-
           return Column(
             children: [
-              // 상단 카테고리
+              /// 상단 카테고리
               Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 5.h),
+                child:
+                SingleChildScrollView(
                   scrollDirection: Axis.horizontal, // 수평 방향으로 스크롤되는 카테고리 버튼
                   controller: controller.scrollController,
                   child: Row(
@@ -89,12 +86,14 @@ class _RestaurantViewState extends State<RestaurantView> {
   // 카테고리 페이지
   Widget _categoryPage(String category) {
     return ListView.builder(
-      itemCount: controller.filteredList.length,
+      padding: EdgeInsets.symmetric(horizontal: 20.sp),
+      itemCount: controller.filteredListMain.length,
       itemBuilder: (context, index) {
-        final restaurant = controller.filteredList[index];
+        final restaurant = controller.filteredListMain[index];
         return RestaurantCard(
           restaurant: restaurant,
           onCall: controller.call,
+          onMap: controller.navermap,
         );
       },
     );
@@ -103,13 +102,13 @@ class _RestaurantViewState extends State<RestaurantView> {
   // 카테고리 버튼
   Widget _categoryButton(String category, int index) {
     return Padding(
-      padding: EdgeInsets.only(right: 10.w),
+      padding: EdgeInsets.only(right: 10.w,),
       child: GestureDetector(
         onTap: () {
           controller.changeCategory(index);
         },
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h),
+          padding: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 5.h),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
@@ -125,6 +124,8 @@ class _RestaurantViewState extends State<RestaurantView> {
           child: Text(
             category,
             style: TextStyle(
+              fontFamily: "Pretendard",
+              fontWeight: FontWeight.w600,
               fontSize: 15,
               color: controller.selectedCategoryIndex.value == index
                   ? Colors.black

@@ -33,8 +33,11 @@ dependencies:
 
   get: ^4.6.6
   url_launcher: ^6.3.1
+  logger: ^2.4.0
+  sqflite: ^2.4.1
+  path_provider: ^2.1.5
 
-  flutter_native_splash: ^2.4.3
+  flutter_native_splash: ^2.4.4
   cupertino_icons: ^1.0.8
   flutter_screenutil: ^5.9.3
   flutter_svg: ^2.0.16
@@ -73,6 +76,30 @@ flutter:
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Pretendard-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Pretendard-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Pretendard-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Pretendard-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Pretendard-Black.ttf
+          weight: 900
+    - family: Titlefont
+      fonts:
+        - asset: assets/fonts/Moneygraphy-Rounded.ttf
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
