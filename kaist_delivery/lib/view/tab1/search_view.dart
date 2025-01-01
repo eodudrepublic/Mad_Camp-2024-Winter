@@ -15,23 +15,32 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  // HomeBinding에서 Get.lazyPut으로 초기화한 RestaurantSearchController를 사용
   final RestaurantController controller = Get.find();
-  late TextEditingController searchController = TextEditingController();
+  late final TextEditingController searchController = TextEditingController();
+  //검색어 페이지에서 키보드 자동 활성화
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    searchController = TextEditingController(); // 검색 컨트롤러 초기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    _focusNode.dispose(); // FocusNode 메모리 해제
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO : 화면 틀 좌우 여백 20.sp로 통일 필요
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
-        leftIconPath: 'assets/icon/back_icon.png',
+        leftIconWidget: const Icon(Icons.arrow_back, color: Colors.black, size: 31,),
         onLeftIconTap: () {
           controller.clearSearchResults(); // 검색 결과 초기화
           Get.back();
@@ -40,17 +49,14 @@ class _SearchViewState extends State<SearchView> {
       ),
       body: Column(
         children: [
-          // 검색 결과 리스트
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
                 return const Center(child: CircularProgressIndicator());
               }
-
               if (controller.searchList.isEmpty) {
                 return const Center(child: Text('검색 결과가 없습니다.'));
               }
-
               return ListView.builder(
                 itemCount: controller.searchList.length,
                 itemBuilder: (context, index) {
@@ -68,11 +74,10 @@ class _SearchViewState extends State<SearchView> {
                         Get.snackbar('오류', '전화 연결 실패: $e');
                       }
                     },
-                    onMap: (placeid) {
-                      final Uri launchUri = Uri(
-                          scheme: 'nmap',
-                          host: 'place',
-                          queryParameters: {'placeid': placeid});
+                    onMap: (name) {
+                      final Uri launchUri = Uri.parse(
+                        'nmap://search?query=$name&appname=immersion_camp.week1.app.kaist_delivery',
+                      );
                       try {
                         launchUrl(launchUri);
                       } catch (e) {
@@ -113,6 +118,7 @@ class _SearchViewState extends State<SearchView> {
           Expanded(
             child: TextField(
               controller: searchController,
+              focusNode: _focusNode, // FocusNode를 연결
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.transparent,
@@ -132,7 +138,7 @@ class _SearchViewState extends State<SearchView> {
                 fontWeight: FontWeight.bold,
               ),
               onSubmitted: (value) {
-                controller.searchRestaurants(value); // 키보드 완료 버튼 눌렀을 때 검색
+                controller.searchRestaurants(value);
               },
             ),
           ),
@@ -140,7 +146,6 @@ class _SearchViewState extends State<SearchView> {
             padding: EdgeInsets.only(right: 10.sp),
             child: GestureDetector(
               onTap: () {
-                // 검색 버튼 누를 때
                 controller.searchRestaurants(searchController.text);
               },
               child: Icon(

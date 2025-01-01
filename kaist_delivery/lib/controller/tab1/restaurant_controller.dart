@@ -47,7 +47,7 @@ class RestaurantController extends GetxController {
     filterRestaurantsByCategory(); // → filteredListMain에 카테고리 반영
 
     /// 검색 화면용 리스트는 처음엔 "전체"가 기본값
-    searchList.assignAll(restaurantList);
+    searchList.clear();
   }
 
   // JSON에서 레스토랑 데이터를 로드하는 메서드
@@ -173,7 +173,8 @@ class RestaurantController extends GetxController {
   void searchRestaurants(String query) {
     if (query.isEmpty) {
       // 검색어 없으면 전체 표시
-      searchList.assignAll(restaurantList);
+      //searchList.assignAll(restaurantList);
+      searchList.clear();
     } else {
       searchList.assignAll(
         restaurantList.where(
@@ -185,7 +186,8 @@ class RestaurantController extends GetxController {
 
   /// 검색 결과 초기화 (search 화면에서 뒤로가기 시 전체 복원 등)
   void clearSearchResults() {
-    searchList.assignAll(restaurantList);
+    //searchList.assignAll(restaurantList);
+    searchList.clear();
   }
 
   // 전화 걸기 기능

@@ -32,7 +32,6 @@ class _HomeViewState extends State<HomeView> {
 
   void _onDoubleTap(int index) {
     if (_currentIndex == 0 && index == 0) {
-      // 현재 맛집 소개 탭에 있고, 맛집 소개 아이콘을 더블 클릭한 경우
       Get.find<ContentController>().resetOrder();
     }
   }

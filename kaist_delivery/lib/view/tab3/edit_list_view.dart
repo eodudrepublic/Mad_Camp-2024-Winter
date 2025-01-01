@@ -24,7 +24,7 @@ class _EditListViewState extends State<EditListView> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
-        leftIconPath: 'assets/icon/back_icon.png',
+        leftIconWidget: const Icon(Icons.arrow_back, color: Colors.black, size: 31,),
         onLeftIconTap: () {
           Get.back();
         },
@@ -49,20 +49,24 @@ class _EditListViewState extends State<EditListView> {
                       border: Border.all(color: Colors.black, width: 1.sp),
                     ),
                     padding: EdgeInsets.symmetric(
-                      vertical: 0,
                       horizontal: 10.sp,
                     ),
-                    child: TextField(
-                      controller: editController,
-                      decoration: const InputDecoration(
-                        hintText: '새로운 Pick을 입력해주세요.',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: 0,
-                          horizontal: 0,
+                    child: SizedBox(
+                      height: 40.0, // 높이를 텍스트 크기와 일치시키기
+                      child: Center( // 텍스트를 정확히 가운데 정렬
+                        child: TextField(
+                          controller: editController,
+                          decoration: const InputDecoration(
+                            hintText: '새로운 Pick을 입력해주세요.',
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero, // 내부 여백 제거
+                          ),
+                          style: TextStyle(
+                            fontSize: 16.sp, // 텍스트 크기 설정
+                          ),
+                          cursorColor: Colors.black,
                         ),
                       ),
-                      cursorColor: Colors.black,
                     ),
                   ),
                 ),
@@ -81,7 +85,7 @@ class _EditListViewState extends State<EditListView> {
                     child: Text(
                       "Pick 추가",
                       style: TextStyle(
-                          fontSize: 15.sp, fontWeight: FontWeight.bold),
+                          fontSize: 15.sp, fontWeight: FontWeight.w700),
                     ),
                   ),
                 )
@@ -90,7 +94,7 @@ class _EditListViewState extends State<EditListView> {
           ),
           // "나의 Pick 목록" 헤더
           Container(
-            padding: EdgeInsets.only(left: 20.sp, right: 20.sp, top: 10.sp),
+            padding: EdgeInsets.only(left: 20.sp, right: 20.sp, top: 15.sp),
             alignment: Alignment.centerLeft,
             child: Text(
               '나의 Pick 목록',
@@ -124,43 +128,74 @@ class _EditListViewState extends State<EditListView> {
                             final TextEditingController dialogEditController =
                                 TextEditingController(text: pick.name);
 
-                            // TODO : AlertDialog 디자인 좀 수정해주세요...
                             return AlertDialog(
-                              title: const Text('Pick 수정/삭제'),
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0), // 모서리 둥글게
+                                side: BorderSide(color: AppColors.mainThemeColor, width: 2.0), // 테두리 색 검정으로 설정
+                              ),
+                              title: const Text('Pick 수정하기', style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w600,
+                              ),),
                               content: TextField(
                                 controller: dialogEditController,
+                                cursorColor: AppColors.mainThemeColor,
                                 decoration: const InputDecoration(
                                   hintText: 'Pick 이름을 수정하세요.',
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.grey), // 비활성 상태 밑줄 색상
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: AppColors.mainThemeColor, width: 2.0), // 활성 상태 밑줄 색상
+                                  ),
                                 ),
                               ),
                               actions: [
                                 // -----------------------------
                                 // 삭제 버튼
                                 // -----------------------------
+                              Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween, // 버튼 사이 간격 조정
+                              children: [
+                                // 삭제 버튼
                                 TextButton(
                                   onPressed: () {
                                     // 삭제 메서드
                                     controller.deletePick(pick.name);
                                     Navigator.of(context).pop();
                                   },
-                                  child: const Text('삭제'),
+                                  child: const Text(
+                                    '삭제',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
-                                // -----------------------------
+                                const SizedBox(width: 10), // 버튼 간 간격 추가
                                 // 완료(수정) 버튼
-                                // -----------------------------
                                 TextButton(
                                   onPressed: () {
-                                    final newName =
-                                        dialogEditController.text.trim();
+                                    final newName = dialogEditController.text.trim();
                                     if (newName.isNotEmpty) {
                                       // 이름 업데이트
                                       controller.updatePick(pick.name, newName);
                                     }
                                     Navigator.of(context).pop();
                                   },
-                                  child: const Text('완료'),
+                                  child: const Text(
+                                    '완료',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                               ],
+                            ),
+                            ],
                             );
                           },
                         );

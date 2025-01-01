@@ -23,7 +23,7 @@ class _RestaurantViewState extends State<RestaurantView> {
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
         titleText: 'K-밥심',
-        rightIconPath: 'assets/icon/search_icon.png',
+        rightIconWidget: const Icon(Icons.search, color: Colors.black, size: 33,),
         onRightIconTap: () {
           Get.toNamed('/search');
         },
@@ -37,23 +37,35 @@ class _RestaurantViewState extends State<RestaurantView> {
           return Column(
             children: [
               /// 상단 카테고리
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 5.h),
-                child:
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal, // 수평 방향으로 스크롤되는 카테고리 버튼
-                  controller: controller.scrollController,
-                  child: Row(
-                    children:
-                        List.generate(controller.categories.length, (index) {
-                      return _categoryButton(
-                          controller.categories[index], index);
-                    }),
+              Container(
+                margin: EdgeInsets.only(bottom: 5.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: const Border(
+                    bottom: BorderSide(
+                      color: Colors.grey, // 경계선 색상
+                      width: 1, // 경계선 두께
+                    ),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.sp),
+                  child:
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal, // 수평 방향으로 스크롤되는 카테고리 버튼
+                    controller: controller.scrollController,
+                    child: Row(
+                      children:
+                      List.generate(controller.categories.length, (index) {
+                        return _categoryButton(
+                            controller.categories[index], index);
+                      }),
+                    ),
                   ),
                 ),
               ),
 
-              // NotificationListener로 전체 화면에서 스와이프 감지
+              /// 전체 화면에서 스와이프 감지
               Expanded(
                 child: NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
@@ -83,7 +95,7 @@ class _RestaurantViewState extends State<RestaurantView> {
     );
   }
 
-  // 카테고리 페이지
+  /// 카테고리 페이지
   Widget _categoryPage(String category) {
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 20.sp),
@@ -99,7 +111,7 @@ class _RestaurantViewState extends State<RestaurantView> {
     );
   }
 
-  // 카테고리 버튼
+  /// 카테고리 버튼
   Widget _categoryButton(String category, int index) {
     return Padding(
       padding: EdgeInsets.only(right: 10.w,),
@@ -108,18 +120,16 @@ class _RestaurantViewState extends State<RestaurantView> {
           controller.changeCategory(index);
         },
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 5.h),
+          padding: EdgeInsets.symmetric(horizontal: 15.sp, vertical: 10.h),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: controller.selectedCategoryIndex.value == index
-                  ? Colors.black
-                  : Colors.grey,
-              width: 1,
-            ),
-            color: controller.selectedCategoryIndex.value == index
-                ? AppColors.mainThemeColor
-                : Colors.white,
+            border: controller.selectedCategoryIndex.value == index
+                ? const Border(
+                  bottom: BorderSide(
+                    color: Colors.black, // 선택된 상태의 색상
+                    width: 1.2, // 테두리 두께
+                  ),
+                )
+                : null, // 선택되지 않았을 때는 테두리 없음
           ),
           child: Text(
             category,

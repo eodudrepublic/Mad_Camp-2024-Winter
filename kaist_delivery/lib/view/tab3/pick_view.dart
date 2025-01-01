@@ -17,7 +17,7 @@ class PickView extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
         titleText: '오늘의 Pick',
-        rightIconPath: 'assets/icon/search_icon.png',
+        rightIconWidget: const Icon(Icons.search, color: Colors.black, size: 33,),
         onRightIconTap: () {
           Get.toNamed('/search');
         },
@@ -134,7 +134,7 @@ class PickView extends StatelessWidget {
         children: [
           // 상단 설명
           Text(
-            '나의 Pick 리스트에서 랜덤으로\n오늘의 메뉴를 추천해드립니다:D',
+            '오늘의 Pick을\n랜덤으로 추천해드립니다 :)',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 20.sp,
@@ -145,7 +145,7 @@ class PickView extends StatelessWidget {
 
           // "메뉴 추천 받기" 버튼
           ElevatedButton(
-            onPressed: () => controller.getRandomPick(),
+            onPressed: () => controller.startPickAnimation(),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.mainThemeColor,
               shape: RoundedRectangleBorder(
@@ -155,11 +155,13 @@ class PickView extends StatelessWidget {
                   width: 1.sp, // 테두리 두께
                 ),
               ),
+              elevation: 4.0,
+              shadowColor: Colors.grey.withOpacity(0.5),
             ),
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 10.sp, horizontal: 5.sp),
               child: Text(
-                '랜덤 Pick 받기',
+                'Pick 뽑기',
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: Colors.black,
@@ -176,47 +178,87 @@ class PickView extends StatelessWidget {
   /// Container 2 : 메뉴가 추천된 이후( selectedPick != "" )
   Widget _pickedContainer(PickController controller) {
     return Container(
-      alignment: Alignment.centerLeft,
+      alignment: Alignment.center,
       height: 0.25.sh,
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(width: 1.sp, color: AppColors.searchIconColor),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 20.sp),
+      //padding: EdgeInsets.symmetric(horizontal: 20.sp),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        //mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          SizedBox(height: 0.09.sh,),
           // 오늘의 Pick 표시
-          Text(
-            '오늘의 Pick은 ~??',
-            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 8.sp),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center, // 중앙 정렬
+            //crossAxisAlignment: CrossAxisAlignment.center, // 수직 중앙 정렬
+            children: [
+              // "오늘은" 텍스트
+              Text(
+                '오늘은 ',
+                style: TextStyle(
+                  fontSize: 25.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
 
-          // 추천된 메뉴
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 8.sp, horizontal: 8.sp),
-            constraints: BoxConstraints(
-              minWidth: 0.5.sw,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.black,
-                width: 1.sp,
+              // 추천된 메뉴 상자
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 8.sp, horizontal: 8.sp),
+                  constraints: BoxConstraints(
+                    maxWidth: 0.6.sw, // 상자의 최대 너비를 설정
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 1.sp,
+                    ),
+                    borderRadius: BorderRadius.circular(12.r),
+                    color: AppColors.mainThemeColor,
+                  ),
+                  child: Text(
+                    controller.selectedPick.value,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
+                    softWrap: true, // 긴 텍스트가 줄바꿈되도록 설정
+                    overflow: TextOverflow.visible, // 줄바꿈이 안 될 경우 기본 동작
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.circular(12.r),
-              color: AppColors.mainThemeColor,
-            ),
-            child: Text(
-              controller.selectedPick.value,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
+              Text(
+                ' 어떠세요?',
+                style: TextStyle(
+                  fontSize: 25.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ),
+          SizedBox(height: 0.01.sh,),
+          // 다시 뽑기
+          GestureDetector(
+            onTap: () {
+              controller.selectedPick.value = ""; // selectedPick을 빈 문자열로 설정
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 10.sp, horizontal: 5.sp),
+              child: Text(
+                '다시 뽑기',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );

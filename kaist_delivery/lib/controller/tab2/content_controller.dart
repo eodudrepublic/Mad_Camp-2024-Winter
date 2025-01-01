@@ -1,24 +1,35 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../model/content.dart';
 
 class ContentController extends GetxController {
   // Content 리스트를 저장하는 옵저버블 리스트
   var contentList = <Content>[].obs;
-  // 더블 클릭 트리거
-  var doubleTapTrigger = false.obs;
+
   // 로딩 상태를 나타내는 변수
   var isLoading = true.obs;
+
+  // 현재 페이지를 관리하는 변수
+  var currentPage = 0.obs;
+
+  // PageController
+  late PageController pageController;
+
+  final int initialPage = 1000;
 
   @override
   void onInit() {
     super.onInit();
     loadContents();
+    pageController = PageController(
+      initialPage: initialPage,
+      viewportFraction: 0.8,
+    );
   }
 
-  // JSON에서 Content 데이터를 로드하는 메서드
   Future<void> loadContents() async {
     try {
       isLoading(true);
@@ -38,18 +49,37 @@ class ContentController extends GetxController {
     }
   }
 
-  // 일별로 카드 정렬하기 위해서
+  // 일별로 카드 정렬하기 위한 Seed 생성
   int _generateSeedForToday() {
     final now = DateTime.now();
     return int.parse("${now.year}${now.month}${now.day}");
   }
 
-  /// 맛집 소개 아이콘을 더블 클릭하면 스와이프 했던 순서가 초기화 되어 처음으로 돌아가도록.
-  void resetOrder() {
-    doubleTapTrigger.value = true; // 더블 클릭 트리거 활성화
-    loadContents(); // 순서 초기화
-    Future.delayed(Duration(milliseconds: 100), () {
-      doubleTapTrigger.value = false; // 트리거 초기화
-    });
+  /// 페이지 초기화 및 데이터 리셋
+  Future<void> resetOrder() async {
+    await loadContents();
+    pageController.animateToPage(
+      initialPage,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  /// 페이지 변경 시 호출
+  void onPageChanged(int index) {
+    currentPage.value = index % contentList.length;
+  }
+
+  /// 헤더 텍스트 반환
+  String getHeaderText() {
+    return "더 많은 맛집을 원하시면 좌우로 넘겨 주세요!";
+  }
+
+  /// 날짜 포맷팅
+  String getFormattedDate() {
+    DateTime date = DateTime.now();
+    String month = date.month < 10 ? '0${date.month}' : '${date.month}';
+    String day = date.day < 10 ? '0${date.day}' : '${date.day}';
+    return '$month월 $day일의 맛집😋';
   }
 }

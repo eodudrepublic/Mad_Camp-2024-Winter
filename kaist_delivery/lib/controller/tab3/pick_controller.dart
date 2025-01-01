@@ -3,10 +3,14 @@ import 'package:get/get.dart';
 import '../../database/model/pick_model.dart';
 import '../../model/pick.dart';
 import '../../database/repository/pick_repository.dart';
+import '../../view/tab3/pick_popup_view.dart';
 
 class PickController extends GetxController {
   // '나의 Pick' 리스트 (UI에서 사용할 모델)
   var pickList = <Pick>[].obs;
+
+  // 애니메이션 상태를 관리
+  var isAnimating = false.obs;
 
   // 현재 추천된 메뉴
   var selectedPick = ''.obs;
@@ -82,5 +86,17 @@ class PickController extends GetxController {
     }
     final randomIndex = Random().nextInt(pickList.length);
     selectedPick.value = pickList[randomIndex].name;
+  }
+
+  /// 애니메이션 시작
+  void startPickAnimation() async {
+    isAnimating.value = true;
+    getRandomPick(); // 랜덤 Pick 선택
+    Get.dialog(
+      PickPopupView(pick: selectedPick.value),
+      barrierDismissible: false,
+    );
+
+    isAnimating.value = false;
   }
 }
