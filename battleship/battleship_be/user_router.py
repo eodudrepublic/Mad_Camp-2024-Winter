@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from schemas import AppUserRequest
-from models import AppUser
+from schemas.user import AppUserRequest
+from models.user import AppUser
 
 
 router = APIRouter()
@@ -19,7 +19,6 @@ def manage_user(user: AppUserRequest, db: Session = Depends(get_db)):
         return {
             "message": "User exists",
             "user": {
-                "id": existing_user.id,
                 "user_id": existing_user.user_id,
                 "nickname": existing_user.nickname,
                 "profile_image_url": existing_user.profile_image_url,
@@ -37,9 +36,14 @@ def manage_user(user: AppUserRequest, db: Session = Depends(get_db)):
         return {
             "message": "User added",
             "user": {
-                "id": new_user.id,
                 "user_id": new_user.user_id,
                 "nickname": new_user.nickname,
                 "profile_image_url": new_user.profile_image_url,
             },
         }
+    
+@router.get("/")
+def get_users(db: Session = Depends(get_db)):
+    """모든 유저 조회"""
+    users = db.query(AppUser).all()  # 동기 쿼리
+    return users
