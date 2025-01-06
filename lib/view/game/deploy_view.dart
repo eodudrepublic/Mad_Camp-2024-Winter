@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import '../../common/app_colors.dart';
 import '../../controller/game/game_controller.dart';
 import '../../model/unit.dart';
-import 'widget/game_board_view.dart';
+import 'widget/deploy_board.dart';
 
 class DeployView extends StatelessWidget {
   final double _cellSize = (1.sw - 10.sp) / 11 - 1.sp;
@@ -20,57 +20,120 @@ class DeployView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final GameController controller = Get.put(GameController());
+    final GameController controller = Get.find<GameController>();
 
     return Scaffold(
       backgroundColor: AppColors.backGroundColor,
-      appBar: AppBar(
-        title: Text('배치하기'),
-        actions: [
-          // TODO : 아직 구현되지 않은 기능
-          // TODO 1 : 유닛 회전 -> 회전한 이미지 저장 -> 유닛 회전하면 회전한 이미지가 들어오도록
-          // TODO 2 : 배치 완료 -> 배치 완료하면 게임 페이지로 넘어가도록
-          // IconButton(
-          //   icon: Icon(Icons.rotate_right),
-          //   onPressed: () {
-          //     controller.rotateSelectedUnit();
-          //   },
-          //   tooltip: '유닛 회전',
-          // ),
-          // IconButton(
-          //   icon: Icon(Icons.check),
-          //   onPressed: () {
-          //     controller.completeDeployment();
-          //   },
-          //   tooltip: '배치 완료',
-          // ),
-        ],
-      ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 5.sp),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              /// 배치 완료 / 배치 시간 안내
+              Container(
+                height: 0.22.sh,
+                alignment: Alignment.bottomCenter,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text("배치하기",
+                        style: TextStyle(
+                            fontSize: 35.sp, fontWeight: FontWeight.bold)),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 10.sp),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // TODO : 남은 배치시간 받아서 표시하도록 (서버 연결 필요)
+                          Container(
+                            height: 0.06.sh,
+                            width: 0.30.sw,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.timeWidgetColor,
+                              borderRadius: BorderRadius.circular(10.sp),
+                            ),
+                            child: Text(
+                              "00:57",
+                              style: TextStyle(
+                                  fontSize: 18.sp, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          SizedBox(width: 10.sp),
+                          GestureDetector(
+                            onTap: () {
+                              // 1) 아직 배치가 안 끝났다면 배치 완료 시도
+                              if (!controller.isDeploymentComplete.value) {
+                                controller.completeDeployment();
+                              }
+
+                              // 2) 배치가 모두 완료되었다면 게임 화면으로 이동
+                              if (controller.isDeploymentComplete.value) {
+                                Get.offNamed('/game');
+                              }
+                            },
+                            child: Container(
+                              height: 0.06.sh,
+                              width: 0.30.sw,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AppColors.attackButtonColor,
+                                borderRadius: BorderRadius.circular(10.sp),
+                              ),
+                              child: Text(
+                                "배치 완료",
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+
               /// 게임판
-              GameBoardView(
+              DeployBoardView(
                 cellSize: _cellSize,
                 borderWidth: _borderWidth,
                 controller: controller, // 통합된 컨트롤러 전달
                 onUnitTap: (Unit? unit) {
                   if (unit == null) {
-                    // 유닛 배치 후 선택 해제
+                    // 1) 유닛 배치 후 선택 해제
                     controller.selectedUnitType.value = null;
                   } else {
-                    // 유닛 선택 시 이동 처리
+                    // -------------------------------
+                    // 1) '배치 중 유닛' 선택이 있었다면 먼저 해제
+                    if (controller.selectedUnitType.value != null) {
+                      controller.selectedUnitType.value = null;
+                    }
+
+                    // 2) 이미 배치된 유닛 선택
                     controller.selectPlacedUnit(unit);
-                    // 추가적인 이동 로직을 여기에 구현할 수 있습니다.
-                    // 예: 새로운 위치로 드래그 앤 드롭
+
+                    // ========================================
+                    // [신규] 선택된 배치 유닛을 즉시 '배치 취소'하는 기능 추가
+                    // ========================================
+                    controller.removePlacedUnit(unit);
+
+                    // 필요 시: 선택된 placedUnit도 해제
+                    // (이미 removePlacedUnit으로 placedUnits에서 제거하므로,
+                    //  이후에 selectPlacedUnit의 효과가 무의미할 수 있어, 추가 해제)
+                    controller.selectedPlacedUnit.value = null;
                   }
                 },
               ),
 
               /// 배치할 유닛 목록
+              // TODO : 각 유닛별 영역 사이즈 조정 (필요시)
               Obx(() {
                 return Container(
                   alignment: Alignment.topCenter,
@@ -99,8 +162,9 @@ class DeployView extends StatelessWidget {
                                 height: _imageSize * 3,
                                 width: _imageSize * 3,
                                 alignment: Alignment.center,
+                                // TODO : unitType에 따라 _getUnitImagePath로 이미지 경로 설정
                                 child: Image.asset(
-                                  _getUnitImagePath(unitType.id, isNone),
+                                  unitType.imagePath,
                                   height: _imageSize * 2,
                                   width: _imageSize * 3,
                                 ),
@@ -125,10 +189,32 @@ class DeployView extends StatelessWidget {
                                     fontWeight: FontWeight.bold),
                               ),
                               SizedBox(height: 6.sp),
-                              SvgPicture.asset(
-                                'assets/icons/turn.svg',
-                                height: 22.sp,
-                                width: 22.sp,
+                              // TODO : 유닛을 배치하면 자동으로 isHorizontal이 바뀌고 있음
+                              // TODO : -> isHorizontal이 토글될때 콘솔 출력을 추가해서, 어느 시점에 isHorizontal이 바뀌는지 확인
+                              GestureDetector(
+                                onTap: () {
+                                  if (!controller.isDeploymentComplete.value) {
+                                    // 1) 만약 '현재 선택된 유닛'이 이 unitType이라면, rotateSelectedUnit() 호출
+                                    if (controller.selectedUnitType.value?.id ==
+                                        unitType.id) {
+                                      // 여기서 GameController.rotateSelectedUnit()은
+                                      //   selectedUnitType.value!.toggleOrientation()을 호출
+                                      controller.rotateSelectedUnit();
+                                    } else {
+                                      // 2) 선택되지 않은 상태라면,
+                                      //    이 unitType 객체에 대해 직접 toggleOrientation() 메서드 호출
+                                      unitType.toggleOrientation();
+
+                                      // UI 갱신
+                                      controller.unitTypes.refresh();
+                                    }
+                                  }
+                                },
+                                child: SvgPicture.asset(
+                                  'assets/icons/turn.svg',
+                                  height: 22.sp,
+                                  width: 22.sp,
+                                ),
                               ),
                             ],
                           ),
@@ -142,7 +228,7 @@ class DeployView extends StatelessWidget {
           ),
         ),
       ),
-      // TODO : 배치 초기화 -> 나중에 쓸거니까 일단 주석처리
+      // TODO : 배치 초기화 -> 나중에 쓸거니까 일단 주석처리 (이 코드는 삭제하지 말것)
       // floatingActionButton: FloatingActionButton(
       //   onPressed: () {
       //     // 배치 초기화 버튼
@@ -155,21 +241,36 @@ class DeployView extends StatelessWidget {
   }
 
   String _getUnitImagePath(String unitTypeId, bool isNone) {
+    // 1) GameController에서 unitTypes 목록을 찾고, orientation을 확인
+    final GameController controller = Get.find<GameController>();
+    final Unit? foundUnit =
+        controller.unitTypes.firstWhereOrNull((u) => u.id == unitTypeId);
+
+    // 2) 가로/세로 방향을 얻기 (기본값: true)
+    bool isHorizontal = foundUnit?.isHorizontal ?? true;
+
+    // 3) baseName 결정 (none / exist)
+    String baseName;
     switch (unitTypeId) {
       case 'u1':
-        return isNone
-            ? 'assets/units/hippo_none.png'
-            : 'assets/units/hippo_exist.png';
+        baseName = isNone ? 'hippo_none' : 'hippo_exist';
+        break;
       case 'u2':
-        return isNone
-            ? 'assets/units/crocodile_none.png'
-            : 'assets/units/crocodile_exist.png';
+        baseName = isNone ? 'crocodile_none' : 'crocodile_exist';
+        break;
       case 'u3':
-        return isNone
-            ? 'assets/units/log_none.png'
-            : 'assets/units/log_exist.png';
+        baseName = isNone ? 'log_none' : 'log_exist';
+        break;
       default:
         return 'assets/units/none.png';
     }
+
+    // 4) 만약 세로 배치(isHorizontal = false)라면, '_rotate' 붙이기
+    if (!isHorizontal) {
+      baseName = '${baseName}_rotate';
+    }
+
+    // 5) 최종 경로 반환
+    return 'assets/units/$baseName.png';
   }
 }
