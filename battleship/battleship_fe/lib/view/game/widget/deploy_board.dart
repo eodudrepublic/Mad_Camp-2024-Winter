@@ -1,3 +1,4 @@
+import 'package:battleship_fe/common/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -6,13 +7,13 @@ import '../../../model/unit.dart';
 
 typedef OnUnitTapCallback = void Function(Unit? unit);
 
-class GameBoardView extends StatelessWidget {
+class DeployBoardView extends StatelessWidget {
   final double cellSize;
   final double borderWidth;
   final GameController controller;
   final OnUnitTapCallback onUnitTap;
 
-  const GameBoardView({
+  const DeployBoardView({
     super.key,
     required this.cellSize,
     required this.borderWidth,
@@ -21,16 +22,34 @@ class GameBoardView extends StatelessWidget {
   });
 
   String _getUnitImagePath(String unitTypeId) {
+    // 1) GameController에서 unitTypes 목록을 찾고, orientation을 확인
+    final GameController controller = Get.find<GameController>();
+    final Unit? foundUnit =
+        controller.unitTypes.firstWhereOrNull((u) => u.id == unitTypeId);
+
+    // 2) 가로/세로 방향을 얻기 (기본값: true)
+    bool isHorizontal = foundUnit?.isHorizontal ?? true;
+
+    // 3) baseName 결정
+    String baseName;
     switch (unitTypeId) {
       case 'u1':
-        return 'assets/units/hippo_ride.png';
+        baseName = 'assets/units/hippo_ride';
       case 'u2':
-        return 'assets/units/crocodile_ride.png';
+        baseName = 'assets/units/crocodile_ride';
       case 'u3':
-        return 'assets/units/log_ride.png';
+        baseName = 'assets/units/log_ride';
       default:
-        return 'assets/units/none.png';
+        baseName = 'assets/units/none';
     }
+
+    // 4) 만약 세로 배치(isHorizontal = false)라면, '_rotate' 붙이기
+    if (!isHorizontal) {
+      baseName = '${baseName}_rotate';
+    }
+
+    // 5) 최종 경로 반환
+    return '$baseName.png';
   }
 
   @override
@@ -50,6 +69,7 @@ class GameBoardView extends StatelessWidget {
                   (index) => Container(
                     alignment: Alignment.center,
                     height: cellSize,
+                    color: AppColors.boardColor,
                     child: index == 0
                         ? Text('') // 빈 셀
                         : Text(
@@ -71,6 +91,7 @@ class GameBoardView extends StatelessWidget {
                         return Container(
                           alignment: Alignment.center,
                           height: cellSize,
+                          color: AppColors.boardColor,
                           child: Text(
                             String.fromCharCode(65 + rowIndex), // A~J
                             style: TextStyle(fontWeight: FontWeight.bold),
@@ -117,7 +138,7 @@ class GameBoardView extends StatelessWidget {
                               color: controller.grid.value[rowIndex]
                                           [colIndex - 1] ==
                                       'empty'
-                                  ? Colors.lightBlue[50]
+                                  ? AppColors.boardColor
                                   : Colors.grey,
                             ),
                             // 이미지는 여기서 렌더링하지 않음
@@ -156,7 +177,7 @@ class GameBoardView extends StatelessWidget {
                         : null,
                   ),
                   child: Image.asset(
-                    _getUnitImagePath(u.id.split('_')[0]), // 유닛 유형에 맞는 이미지 경로
+                    u.imagePath,
                     fit: BoxFit.contain,
                   ),
                 ),
