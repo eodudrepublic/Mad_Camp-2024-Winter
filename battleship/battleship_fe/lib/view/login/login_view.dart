@@ -85,13 +85,13 @@ class LoginView extends StatelessWidget {
   // 로그인 버튼 위젯
   Widget _loginButton(UserController controller) {
     return Obx(() {
-      if (controller.user.value == null) {
+      if (controller.user.value?.id == null) {
         return SizedBox(
           width: 0.6.sw,
           child: ElevatedButton(
             onPressed: () async {
               await controller.kakaoLogin();
-              if (controller.user.value != null) {
+              if (controller.user.value?.id != null) {
                 Get.offNamed('/landing');
               }
             },
@@ -133,7 +133,7 @@ class LoginView extends StatelessWidget {
   // 로그아웃 버튼 위젯
   Widget _logoutButton(UserController controller) {
     return Obx(() {
-      if (controller.user.value != null) {
+      if (controller.user.value?.id != null) {
         return ElevatedButton(
           onPressed: () {
             controller.kakaoLogout();
@@ -144,7 +144,8 @@ class LoginView extends StatelessWidget {
           ),
           child: const Text(
             'Logout',
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(
+                fontFamily: 'Sejong', color: Colors.white, fontSize: 16),
           ),
         );
       } else {

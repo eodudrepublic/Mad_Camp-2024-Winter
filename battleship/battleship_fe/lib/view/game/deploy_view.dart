@@ -4,8 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../common/app_colors.dart';
+import '../../common/utils/logger.dart';
 import '../../controller/game/game_controller.dart';
+import '../../model/game_state.dart';
 import '../../model/unit.dart';
+import '../../model/user_model.dart';
+import '../../service/game_service.dart';
 import 'widget/deploy_board.dart';
 
 class DeployView extends StatelessWidget {
@@ -18,6 +22,7 @@ class DeployView extends StatelessWidget {
 
   DeployView({super.key});
 
+  // TODO : (DELETE) /games/delete 적용 -> 만들어진 방 삭제
   @override
   Widget build(BuildContext context) {
     final GameController controller = Get.find<GameController>();
@@ -40,38 +45,72 @@ class DeployView extends StatelessWidget {
                   children: [
                     Text("배치하기",
                         style: TextStyle(
-                            fontSize: 35.sp, fontWeight: FontWeight.bold)),
+                            fontFamily: 'Sejong',
+                            fontSize: 35.sp,
+                            fontWeight: FontWeight.bold)),
                     Container(
                       padding: EdgeInsets.symmetric(vertical: 10.sp),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // TODO : 남은 배치시간 받아서 표시하도록 (서버 연결 필요)
-                          Container(
-                            height: 0.06.sh,
-                            width: 0.30.sw,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AppColors.timeWidgetColor,
-                              borderRadius: BorderRadius.circular(10.sp),
-                            ),
-                            child: Text(
-                              "00:57",
-                              style: TextStyle(
-                                  fontSize: 18.sp, fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                          Obx(() {
+                            int minutes =
+                                controller.remainingDeploymentSeconds.value ~/
+                                    60;
+                            int seconds =
+                                controller.remainingDeploymentSeconds.value %
+                                    60;
+                            String formattedTime =
+                                '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+                            return Container(
+                              height: 0.06.sh,
+                              width: 0.30.sw,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: AppColors.timeWidgetColor,
+                                borderRadius: BorderRadius.circular(10.sp),
+                              ),
+                              child: Text(
+                                formattedTime,
+                                style: TextStyle(
+                                    fontFamily: 'Sejong',
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            );
+                          }),
                           SizedBox(width: 10.sp),
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               // 1) 아직 배치가 안 끝났다면 배치 완료 시도
                               if (!controller.isDeploymentComplete.value) {
                                 controller.completeDeployment();
                               }
 
-                              // 2) 배치가 모두 완료되었다면 게임 화면으로 이동
+                              // 2) 배치가 모두 완료되었다면 좌표 출력 후 게임 화면으로 이동
                               if (controller.isDeploymentComplete.value) {
+                                // 모든 배치된 유닛의 좌표를 수집
+                                List<String> allCoordinates = [];
+                                for (var unit in controller.placedUnits) {
+                                  allCoordinates.addAll(unit.coordinates);
+                                }
+
+                                // 좌표들을 콘솔에 출력
+                                Log.info(
+                                    "배치된 유닛의 좌표들: ${allCoordinates.join(', ')}");
+                                // 서버에 보드 전송
+                                final myId = AppUser().id ?? 0;
+                                final gameService = GameService();
+                                final rCode = GameState().roomCode ?? '';
+
+                                await gameService.sendBoard(
+                                    rCode, myId, allCoordinates);
+
+                                // 배치 타이머 초기화
+                                controller.resetDeploymentTimer();
+                                // 게임 화면으로 이동
                                 Get.offNamed('/game');
                               }
                             },
@@ -86,6 +125,7 @@ class DeployView extends StatelessWidget {
                               child: Text(
                                 "배치 완료",
                                 style: TextStyle(
+                                  fontFamily: 'Sejong',
                                   fontSize: 18.sp,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -173,24 +213,25 @@ class DeployView extends StatelessWidget {
                               Text(
                                 unitType.name,
                                 style: TextStyle(
+                                    fontFamily: 'Sejong',
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 '(${unitType.width} x ${unitType.height})',
                                 style: TextStyle(
+                                    fontFamily: 'Sejong',
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 '남은 개수: $remaining',
                                 style: TextStyle(
+                                    fontFamily: 'Sejong',
                                     fontSize: 12.sp,
                                     fontWeight: FontWeight.bold),
                               ),
                               SizedBox(height: 6.sp),
-                              // TODO : 유닛을 배치하면 자동으로 isHorizontal이 바뀌고 있음
-                              // TODO : -> isHorizontal이 토글될때 콘솔 출력을 추가해서, 어느 시점에 isHorizontal이 바뀌는지 확인
                               GestureDetector(
                                 onTap: () {
                                   if (!controller.isDeploymentComplete.value) {
@@ -233,6 +274,7 @@ class DeployView extends StatelessWidget {
       //   onPressed: () {
       //     // 배치 초기화 버튼
       //     controller.resetPlacement();
+      //     controller.resetDeploymentTimer(); // 타이머도 리셋
       //   },
       //   tooltip: '배치 초기화',
       //   child: Icon(Icons.refresh),

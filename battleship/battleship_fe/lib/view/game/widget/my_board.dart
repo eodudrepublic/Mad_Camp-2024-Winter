@@ -24,7 +24,7 @@ class MyBoardView extends StatelessWidget {
       case 'enemy_miss':
         return 'assets/markers/enemy_miss_2.png';
       default:
-        return ''; // empty
+        return ''; // 비어 있음
     }
   }
 
@@ -53,7 +53,9 @@ class MyBoardView extends StatelessWidget {
                         ? const Text('')
                         : Text(
                             index.toString(),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontFamily: 'Sejong',
+                                fontWeight: FontWeight.bold),
                           ),
                   ),
                 ),
@@ -73,22 +75,17 @@ class MyBoardView extends StatelessWidget {
                           color: AppColors.boardColor,
                           child: Text(
                             String.fromCharCode(65 + rowIndex),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontFamily: 'Sejong',
+                                fontWeight: FontWeight.bold),
                           ),
                         );
                       } else {
-                        // 실제 데이터 셀 (enemy_hit/miss 마커 표시)
-                        final marker =
-                            controller.myBoardMarkers[rowIndex][colIndex - 1];
-                        final markerPath = _getMarkerImagePath(marker);
-
+                        // 실제 데이터 셀 (배경만 표시, 마커는 별도)
                         return Container(
                           alignment: Alignment.center,
                           height: cellSize,
                           color: AppColors.boardColor,
-                          child: markerPath.isNotEmpty
-                              ? Image.asset(markerPath, fit: BoxFit.cover)
-                              : null,
                         );
                       }
                     },
@@ -128,6 +125,31 @@ class MyBoardView extends StatelessWidget {
               ),
             );
           }),
+
+          // -------------------------
+          // (3) 마커 오버레이
+          // -------------------------
+          ...List.generate(10, (rowIndex) {
+            return List.generate(10, (colIndex) {
+              final marker = controller.myBoardMarkers[rowIndex][colIndex];
+              final markerPath = _getMarkerImagePath(marker);
+              if (markerPath.isEmpty) return Container();
+
+              final leftPos = (colIndex + 1) * cellSize;
+              final topPos = (rowIndex + 1) * cellSize;
+
+              return Positioned(
+                left: leftPos,
+                top: topPos,
+                width: cellSize,
+                height: cellSize,
+                child: Image.asset(
+                  markerPath,
+                  fit: BoxFit.cover,
+                ),
+              );
+            });
+          }).expand((element) => element).toList(),
         ],
       );
     });

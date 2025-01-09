@@ -54,7 +54,9 @@ class EnemyBoardView extends StatelessWidget {
                         ? const Text('')
                         : Text(
                             index.toString(),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontFamily: 'Sejong',
+                                fontWeight: FontWeight.bold),
                           ),
                   ),
                 ),
@@ -74,7 +76,9 @@ class EnemyBoardView extends StatelessWidget {
                           color: AppColors.boardColor,
                           child: Text(
                             String.fromCharCode(65 + rowIndex),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontFamily: 'Sejong',
+                                fontWeight: FontWeight.bold),
                           ),
                         );
                       } else {
@@ -86,6 +90,8 @@ class EnemyBoardView extends StatelessWidget {
 
                         return GestureDetector(
                           onTap: () {
+                            // TODO : 내 공격 턴일때만 터치 가능하도록 구현
+                            // TODO : 공격을 한 셀은 다시 터치하지 못하도록 구현
                             // 내 공격 턴일 때만 가능하다고 가정
                             Log.info(
                                 "Tapped enemy board cell [row=$rowIndex, col=${colIndex - 1}]");
