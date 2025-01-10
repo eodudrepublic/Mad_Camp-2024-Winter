@@ -5,3 +5,9 @@
 ### 이름 : KAISTDelivery
 
 ### 주제 : 카이스트 기숙사에서 배달이 되는 식당을 소개하는 Flutter Application
+
+## 2주차 (팀원 : KAIST 허지민)
+
+### 이름 : BattleBara
+
+### 주제 : BattleShip 보드게임을 귀여운 카피바라로 구현한 턴제 게임
