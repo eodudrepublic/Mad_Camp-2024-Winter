@@ -1,49 +1,42 @@
 from sqlalchemy.orm import Session, joinedload
-from models import User, Friend, Routine, ExerciseName
+from models import User, Friend, Routine, ExerciseName, Record, MealPhoto, OwnPhoto
 from typing import Optional, List
-from schemas import RoutineCreate
+from schemas import RoutineCreate, UserLoginRequest
 from fastapi import HTTPException
 
-#카카오 로그인 및 회원 가입 관련 crud 정리
-def get_user_by_kakao_id(db: Session, kakao_id: str) -> Optional[User]:
-    """
-    주어진 kakao_id를 가진 사용자를 데이터베이스에서 검색합니다.
-    """
-    return db.query(User).filter(User.kakao_id == kakao_id).first()
+def manage_user_in_db(db: Session, user: UserLoginRequest):
 
+    # 기존 유저 확인
+    existing_user = db.query(User).filter(User.kakao_id == user.kakao_id).first()
+    if existing_user:
+        return {
+            "message": "User exists",
+            "user": {
+                "kakao_id": existing_user.kakao_id,
+                "nickname": existing_user.nickname,
+                "profile_image": existing_user.profile_image,
+            },
+        }
 
-def create_user(
-    db: Session,
-    kakao_id: str,
-    connected_at: str,
-    email: Optional[str],
-    nickname: Optional[str],
-    profile_image: Optional[str],
-    thumbnail_image: Optional[str],
-    profile_nickname_needs_agreement: Optional[bool],
-    profile_image_needs_agreement: Optional[bool],
-    is_default_image: Optional[bool],
-    is_default_nickname: Optional[bool],
-) -> User:
-    """
-    주어진 정보를 바탕으로 새로운 사용자를 생성하고 데이터베이스에 저장
-    """
-    user = User(
-        kakao_id=kakao_id,
-        connected_at=connected_at,
-        email=email,
-        nickname=nickname,
-        profile_image=profile_image,
-        thumbnail_image=thumbnail_image,
-        profile_nickname_needs_agreement=profile_nickname_needs_agreement,
-        profile_image_needs_agreement=profile_image_needs_agreement,
-        is_default_image=is_default_image,
-        is_default_nickname=is_default_nickname,
+    # 새로운 유저 추가
+    new_user = User(
+        kakao_id=user.kakao_id,
+        nickname=user.nickname,
+        profile_image=user.profile_image,
+        connected_at=user.connected_at,
     )
-    db.add(user)
+    db.add(new_user)
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(new_user)
+
+    return {
+        "message": "User added",
+        "user": {
+            "kakao_id": new_user.kakao_id,
+            "nickname": new_user.nickname,
+            "profile_image": new_user.profile_image,
+        },
+    }
 
 #friend 테이블 관련 crud 정리
 
@@ -175,3 +168,94 @@ def get_all_exercises(db : Session):
 # 운동 이름으로 운동 조회하기
 def search_exercises_by_name(db : Session, query: str):
     return db.query(ExerciseName).filter(ExerciseName.name.contains(query)).all()
+
+# 프로필, 운동 완료 일수 반환
+def get_user_profile(db: Session, user_id: int):
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 운동 완료 일수 계산 (Record 테이블 기준)
+    completed_days = db.query(Record).filter(Record.user_id == user_id).count()
+
+    return {
+        "nickname": user.nickname,
+        "profile_image": user.profile_image,
+        "completed_days": completed_days,
+    }
+
+# 운동 완료 날짜를 캘린더에 표시하기 - 사용자의 운동 기록 데이터 날짜 별로 가져오기
+def get_user_records(db: Session, user_id: int):
+
+    # 사용자 존재 여부 확인
+    user_exists = db.query(User).filter(User.id == user_id).first()
+    if not user_exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 운동 기록 데이터 조회
+    records = db.query(Record).filter(Record.user_id == user_id).all()
+    if not records:
+        return []  # 기록이 없으면 빈 리스트 반환
+
+    # 날짜별 기록 데이터 반환
+    return [
+        {
+            "date": record.datetime.date(),
+            "weight": record.weight,
+            "body_fat": record.body_fat,
+            "muscle_mass": record.muscle_mass,
+        }
+        for record in records
+    ]
+
+# 오운완 사진 DB 저장
+def save_own_photo(db: Session, user_id: int, photo_path: str):
+
+    new_photo = OwnPhoto(
+        user_id=user_id,
+        photo_path=photo_path,
+        datetime=datetime.now()
+    )
+    db.add(new_photo)
+    db.commit()
+    db.refresh(new_photo)
+    return new_photo
+
+# 특정 사용자가 저장한 모든 오운완 사진 조회
+def get_own_photos(db: Session, user_id: int):
+
+    photos = db.query(OwnPhoto).filter(OwnPhoto.user_id == user_id).all()
+    return [
+        {"id": photo.id, "photo_path": photo.photo_path, "datetime": photo.datetime}
+        for photo in photos
+    ]
+
+# 소셜탭에서 오운완 사진 전체 조회
+def get_social_photos(db: Session, user_id: int):
+
+    # 본인과 친구의 ID 조회
+    friend_ids = (
+        db.query(Friend.friend_id)
+        .filter(Friend.user_id == user_id)
+        .subquery()
+    )
+    # 본인과 친구들이 업로드한 사진 조회
+    photos = db.query(OwnPhoto).filter(
+        OwnPhoto.user_id.in_([user_id]) | OwnPhoto.user_id.in_(friend_ids)
+    ).all()
+    return [
+        {"id": photo.id, "user_id": photo.user_id, "photo_path": photo.photo_path, "datetime": photo.datetime}
+        for photo in photos
+    ]
+
+# 나의 오운완 사진 하나 소셜탭에 업로드
+def upload_social_photo(db: Session, user_id: int, photo_id: int):
+
+    # 사진이 본인의 사진인지 확인
+    photo = db.query(OwnPhoto).filter(OwnPhoto.id == photo_id, OwnPhoto.user_id == user_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found or not owned by user")
+
+    # 업로드된 사진으로 저장 (별도의 플래그 추가 가능)
+    return photo
