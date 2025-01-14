@@ -32,7 +32,7 @@ class ExpandableFab extends StatelessWidget {
                     label: "사진 촬영",
                     onTap: () {
                       Log.info("FAB : 사진 촬영");
-                      // TODO: 사진 촬영 로직
+                      Get.toNamed('/oh_un_wan');
                     },
                   ),
                   SizedBox(height: 20.sp),
@@ -41,7 +41,7 @@ class ExpandableFab extends StatelessWidget {
                     label: "루틴 만들기",
                     onTap: () {
                       Log.info("FAB : 루틴 만들기");
-                      // TODO: 루틴 만들기 로직
+                      Get.toNamed('/make_routine');
                     },
                   ),
                   SizedBox(height: 20.sp),
@@ -50,7 +50,7 @@ class ExpandableFab extends StatelessWidget {
                     label: "식단 기록 하기",
                     onTap: () {
                       Log.info("FAB : 식단 기록 하기");
-                      // TODO: 식단 기록 로직
+                      Get.toNamed('/diet');
                     },
                   ),
                 ],
@@ -124,7 +124,7 @@ class ExpandableFab extends StatelessWidget {
             height: 60.sp,
             alignment: Alignment.center,
             decoration: const BoxDecoration(
-                shape: BoxShape.circle, color: AppColors.primaryColor2),
+                shape: BoxShape.circle, color: AppColors.primaryColor),
             child: Image.asset(
               iconPath,
               width: 35.sp,
