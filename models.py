@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, Date, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, Text, Date, DateTime, ForeignKey, UniqueConstraint,  Float
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -17,7 +17,7 @@ class User(Base):
     records = relationship("Record", back_populates="user")
     meal_photos = relationship("MealPhoto", back_populates="user")
     own_photos = relationship("OwnPhoto", back_populates="user")
-
+    body_metrics = relationship("BodyMetrics", back_populates="user")
 
 class Friend(Base):
     __tablename__ = "friends"
@@ -47,6 +47,7 @@ class Routine(Base):
     __tablename__ = "routines"
 
     id = Column(Integer, primary_key=True, index=True)
+    routine_id = Column(Integer, index=True)  # 동일한 루틴 ID를 사용하는 운동들
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # 사용자 ID
     exercise_id = Column(Integer, ForeignKey("exercise_names.id"), nullable=False)  # 운동 ID
     routine_name = Column(String, nullable=True)
@@ -56,6 +57,7 @@ class Routine(Base):
     # Relationships
     user = relationship("User")
     exercise = relationship("ExerciseName")
+
 
 class OwnPhoto(Base):
     __tablename__ = "own_photos"
@@ -93,3 +95,16 @@ class Record(Base):
 
     # Relationships
     user = relationship("User", back_populates="records")
+
+class BodyMetrics(Base):
+    __tablename__ = "body_metrics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # 사용자 ID
+    record_date = Column(Date, nullable=False)  # 기록 날짜
+    weight = Column(Float, nullable=False)  # 체중 (kg)
+    muscle_mass = Column(Float, nullable=False)  # 골격근량 (kg)
+    body_fat_percentage = Column(Float, nullable=False)  # 체지방률 (%)
+
+    # Relationships
+    user = relationship("User", back_populates="body_metrics")

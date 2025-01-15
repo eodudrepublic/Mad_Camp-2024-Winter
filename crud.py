@@ -1,9 +1,12 @@
 from sqlalchemy.orm import Session, joinedload
-from models import User, Friend, Routine, ExerciseName, Record, MealPhoto, OwnPhoto
+from models import User, Friend, Routine, ExerciseName, Record, MealPhoto, OwnPhoto, BodyMetrics
 from typing import Optional, List
-from schemas import RoutineCreate, UserLoginRequest
+from schemas import RoutineCreate, UserLoginRequest, BodyMetricsCreate, RoutineUpdateRequest, ExerciseUpdateRequest
 from datetime import datetime
 from fastapi import HTTPException
+import base64
+import re
+import os
 
 def manage_user_in_db(db: Session, user: UserLoginRequest):
 
@@ -13,6 +16,7 @@ def manage_user_in_db(db: Session, user: UserLoginRequest):
         return {
             "message": "User exists",
             "user": {
+                "id": existing_user.id, #임의 추가
                 "kakao_id": existing_user.kakao_id,
                 "nickname": existing_user.nickname,
                 "profile_image": existing_user.profile_image,
@@ -21,10 +25,11 @@ def manage_user_in_db(db: Session, user: UserLoginRequest):
 
     # 새로운 유저 추가
     new_user = User(
+        id = user.id, # 임의 추가
         kakao_id=user.kakao_id,
         nickname=user.nickname,
         profile_image=user.profile_image,
-        connected_at=user.connected_at,
+        # connected_at=user.connected_at,
     )
     db.add(new_user)
     db.commit()
@@ -33,6 +38,7 @@ def manage_user_in_db(db: Session, user: UserLoginRequest):
     return {
         "message": "User added",
         "user": {
+            "id" : new_user.id,
             "kakao_id": new_user.kakao_id,
             "nickname": new_user.nickname,
             "profile_image": new_user.profile_image,
@@ -109,58 +115,94 @@ def delete_friend(db: Session, user_id: int, friend_id: int):
 
 # 루틴 생성 - 선택한 운동들 임시 저장
 def save_temporary_routines_in_db(db: Session, routines: List[RoutineCreate]):
-
     for routine in routines:
-        new_routine = Routine(
-            user_id=routine.user_id,
-            exercise_id=routine.exercise_id,
-            sets=routine.sets,
-            reps=routine.reps,
-        )
-        db.add(new_routine)
+        # 동일한 user_id와 exercise_id, routine_id로 저장된 루틴이 없으면 추가
+        existing_routine = db.query(Routine).filter(
+            Routine.user_id == routine.user_id,
+            Routine.exercise_id == routine.exercise_id,
+            Routine.routine_id == routine.routine_id
+        ).first()
+
+        if not existing_routine:
+            new_routine = Routine(
+                routine_id=routine.routine_id,
+                user_id=routine.user_id,
+                exercise_id=routine.exercise_id,
+                sets=routine.sets,
+                reps=routine.reps,
+            )
+            db.add(new_routine)
     
     db.commit()
 
-# 루틴 이름 추가
-def update_routine_name_in_db(db: Session, user_id: int, routine_name: str) -> bool:
+# 루틴 이름을 업데이트하는 함수
+def update_routine_name_in_db(db: Session, user_id: int, routine_name: str):
+    # user_id와 동일한 routine_id를 가진 모든 루틴을 가져옵니다.
+    routines = db.query(Routine).filter(Routine.user_id == user_id).all()
 
-    # user_id와 routine_name IS NULL인 경우 필터링
-    routines = db.query(Routine).filter(
-        Routine.user_id == user_id,
-        Routine.routine_name == None
-    ).all()
-
+    # 루틴이 없다면 False 반환
     if not routines:
-        # 업데이트할 데이터가 없는 경우 False 반환
+        print("Debug: No routines found to update.")
         return False
 
-    # 이름 업데이트
+    # 루틴 이름 업데이트
     for routine in routines:
+        # 동일한 routine_id를 가진 루틴이 있으면 routine_name을 동일하게 업데이트
         routine.routine_name = routine_name
 
     db.commit()
+    print("Debug: Routines updated successfully.")
     return True
 
+# 특정 사용자의 루틴 이름, 운동 별 세트, 횟수 수정
+def update_routine_details_and_name(
+    db: Session, user_id: int, routine_id: int, routine_name: Optional[str], exercises: List[ExerciseUpdateRequest]
+) -> List[Routine]:
+    updated_routines = []
+    
+    for exercise in exercises:
+        routine = db.query(Routine).filter(
+            Routine.id == routine_id,
+            Routine.user_id == user_id,
+            Routine.exercise_id == exercise.exercise_id
+        ).first()
 
-# 루틴 가져오는 용 - 루틴 이름으로 조회
-def get_routines_by_name_in_db(db: Session, user_id: int, routine_name: str):
+        if not routine:
+            raise HTTPException(status_code=404, detail=f"Routine not found for Exercise ID {exercise.exercise_id}")
 
-    routines = db.query(Routine).options(joinedload(Routine.exercise)).filter(
-        Routine.user_id == user_id,
-        Routine.routine_name == routine_name
-    ).all()
+        # 세트 수와 반복 횟수 수정
+        routine.sets = exercise.sets
+        routine.reps = exercise.reps
 
-    # 운동 데이터를 반환
-    return [
-        {
-            "id": routine.id,
-            "exercise_id": routine.exercise_id,
-            "exercise_name": routine.exercise.name if routine.exercise else "Unknown Exercise",
-            "sets": routine.sets,
-            "reps": routine.reps,
-        }
-        for routine in routines
-    ]
+        # 루틴 이름 수정 (필요시)
+        if routine_name:
+            routine.routine_name = routine_name
+
+        db.commit()
+        db.refresh(routine)
+        updated_routines.append(routine)
+
+    return updated_routines
+
+# # 루틴 가져오는 용 - 루틴 이름으로 조회
+# def get_routines_by_name_in_db(db: Session, user_id: int, routine_name: str):
+
+#     routines = db.query(Routine).options(joinedload(Routine.exercise)).filter(
+#         Routine.user_id == user_id,
+#         Routine.routine_name == routine_name
+#     ).all()
+
+#     # 운동 데이터를 반환
+#     return [
+#         {
+#             "id": routine.id,
+#             "exercise_id": routine.exercise_id,
+#             "exercise_name": routine.exercise.name if routine.exercise else "Unknown Exercise",
+#             "sets": routine.sets,
+#             "reps": routine.reps,
+#         }
+#         for routine in routines
+#     ]
 
 # 운동 데이터 전체 조회
 def get_all_exercises(db : Session):
@@ -172,7 +214,6 @@ def search_exercises_by_name(db : Session, query: str):
 
 # 프로필, 운동 완료 일수 반환
 def get_user_profile(db: Session, user_id: int):
-
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -181,10 +222,12 @@ def get_user_profile(db: Session, user_id: int):
     completed_days = db.query(Record).filter(Record.user_id == user_id).count()
 
     return {
+        "user_id": user.id,  # 사용자 ID 추가
         "nickname": user.nickname,
         "profile_image": user.profile_image,
         "completed_days": completed_days,
     }
+
 
 # 운동 완료 날짜를 캘린더에 표시하기 - 사용자의 운동 기록 데이터 날짜 별로 가져오기 / postman 확인 완료료
 def get_user_records(db: Session, user_id: int):
@@ -271,3 +314,22 @@ def save_meal_photo(db: Session, user_id: int, photo_path: str):
 def get_all_meal_photos_by_user(db: Session, user_id: int):
 
     return db.query(MealPhoto).filter(MealPhoto.user_id == user_id).all()
+
+# 사용자의 체중 및 골격근량, 체지방률 기록 생성
+def create_body_metrics(db: Session, user_id: int, metrics_data: BodyMetricsCreate) -> BodyMetrics:
+    # 새로운 BodyMetrics 객체 생성
+    body_metrics = BodyMetrics(
+        user_id=user_id,
+        record_date=metrics_data.record_date,
+        weight=metrics_data.weight,
+        muscle_mass=metrics_data.muscle_mass,
+        body_fat_percentage=metrics_data.body_fat_percentage,
+    )
+    db.add(body_metrics)
+    db.commit()
+    db.refresh(body_metrics)  
+    return body_metrics
+
+#사용자의 체중 및 골격근량, 체지방률 기록 조회
+def get_user_body_metrics(db: Session, user_id: int) -> list[BodyMetrics]:
+    return db.query(BodyMetrics).filter(BodyMetrics.user_id == user_id).order_by(BodyMetrics.record_date).all()
