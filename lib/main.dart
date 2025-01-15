@@ -9,6 +9,7 @@ import 'package:health_diary_fe/view/home/home_view.dart';
 import 'package:health_diary_fe/view/login/login_view.dart';
 import 'package:health_diary_fe/view/make_routine/routine_view.dart';
 import 'package:health_diary_fe/view/mypage/mypage_view.dart';
+import 'package:health_diary_fe/view/set_theme/theme_view.dart';
 import 'package:health_diary_fe/view/social/social_view.dart';
 import 'package:health_diary_fe/view_model/camera/camera_controller.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
@@ -73,12 +74,14 @@ class MyApp extends StatelessWidget {
       designSize: const Size(400, 860),
       builder: (context, child) {
         return GetMaterialApp(
-          title: 'Health Diary',
-          initialRoute: '/home',
+          title: 'Man is Pink',
+          debugShowCheckedModeBanner: false,
+          initialRoute: '/login',
           getPages: [
             /// 로그인
             GetPage(name: '/login', page: () => LoginView()),
 
+            // TODO : 메인 탭들 화면 전환 효과 추가
             /// 메인 탭 1 : 홈
             GetPage(name: '/home', page: () => HomeView()),
 
@@ -110,6 +113,9 @@ class MyApp extends StatelessWidget {
 
             /// 메인 탭 4 : 마이페이지
             GetPage(name: '/mypage', page: () => MyPageView()),
+
+            /// 테마 설정
+            GetPage(name: '/set_theme', page: () => ThemeView()),
           ],
         );
       },
